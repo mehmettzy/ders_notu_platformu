@@ -4,30 +4,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
-
-// Geçici Ana Ekran
-class ScaffoldPlaceholder extends StatelessWidget {
-  final String title;
-  const ScaffoldPlaceholder({super.key, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: const Center(
-        child: Text('Kat 0 Başarılı: Proje İskeleti Kuruldu!'),
-      ),
-    );
-  }
-}
+import 'features/auth/auth_screen.dart';
 
 // Yönlendirme (Router)
 final _router = GoRouter(
   routes: [
     GoRoute(
       path: '/',
-      builder: (context, state) =>
-          const ScaffoldPlaceholder(title: 'Ders Notu Platformu'),
+      builder: (context, state) => const AuthScreen(),
     ),
   ],
 );
@@ -39,12 +23,18 @@ Future<void> main() async {
   await dotenv.load(fileName: ".env");
 
   // Supabase'i başlat
+  // Supabase'i başlat
   await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+    url: 'https://ujkrkdivjdmnjtgxwtyj.supabase.co',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqa3JrZGl2amRtbmp0Z3h3dHlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1NTMzMDgsImV4cCI6MjEwNzEyOTMwOH0.L2qXN-kK3HAkrij_zWE_WQADsHNDaFr0SoP4DQ-kjp8',
   );
 
-  runApp(const ProviderScope(child: MyApp()));
+  runApp(
+    const ProviderScope(
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -56,7 +46,7 @@ class MyApp extends StatelessWidget {
       title: 'Ders Notu Platformu',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system, // Cihaz temasına göre otomatik değişir
+      themeMode: ThemeMode.system,
       routerConfig: _router,
       debugShowCheckedModeBanner: false,
     );
