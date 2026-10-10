@@ -5,10 +5,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/auth_screen.dart';
+import 'package:ders_notu_platformu/features/profile/profile_completion_screen.dart';
 
 // Yönlendirme (Router)
+// Yönlendirme (Router)
 final _router = GoRouter(
+  initialLocation:
+      '/profile-completion', // Doğrudan profil tamamlama ekranıyla başlatır
   routes: [
+    GoRoute(
+      path: '/profile-completion',
+      builder: (context, state) => const ProfileCompletionScreen(),
+    ),
     GoRoute(
       path: '/',
       builder: (context, state) => const AuthScreen(),
