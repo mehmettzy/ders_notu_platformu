@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../notes/add_note_screen.dart'; // Dosya yolunun projene uygun olduğundan emin ol
+import 'package:url_launcher/url_launcher.dart';
+import '../notes/add_note_screen.dart';
+import '../auth/auth_screen.dart'; // Çıkış yapınca döneceğimiz ekran
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,12 +24,16 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.logout),
             onPressed: () async {
               await _supabase.auth.signOut();
-              // Çıkış yapınca uygulamanın giriş ekranına yönlendirmesi eklenecek
+              if (context.mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AuthScreen()),
+                );
+              }
             },
           )
         ],
       ),
-      // Supabase'den verileri gerçek zamanlı çekme
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: _supabase
             .from('notes')
@@ -49,12 +55,12 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           }
 
-          // Notları liste halinde gösterme
           return ListView.builder(
             itemCount: notes.length,
             padding: const EdgeInsets.all(8.0),
             itemBuilder: (context, index) {
               final note = notes[index];
+
               return Card(
                 elevation: 2,
                 margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
@@ -69,8 +75,29 @@ class _HomeScreenState extends State<HomeScreen> {
                       '${note['course_name']}\n${note['description'] ?? ''}'),
                   isThreeLine: true,
                   trailing: const Icon(Icons.download),
-                  onTap: () {
-                    // İleride tıklandığında PDF açma işlemi buraya gelecek
+                  onTap: () async {
+                    // Veritabanından gelen dosya URL'sini alıyoruz
+                    final String? fileUrl = note['file_url'];
+
+                    if (fileUrl != null && fileUrl.isNotEmpty) {
+                      final Uri url = Uri.parse(fileUrl);
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url);
+                      } else {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Dosya açılamadı!')),
+                          );
+                        }
+                      }
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Dosya linki bulunamadı!')),
+                        );
+                      }
+                    }
                   },
                 ),
               );
@@ -78,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
-      // Yeni Not Ekleme Butonu
+      // Yeni Not Ekleme Butonu (Scaffold'a ait)
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
