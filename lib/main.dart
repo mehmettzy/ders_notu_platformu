@@ -2,31 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/auth_screen.dart';
-import 'package:ders_notu_platformu/features/profile/profile_completion_screen.dart';
-import 'package:ders_notu_platformu/features/notes/add_note_screen.dart';
-import 'features/home/home_screen.dart';
 
-/// Yönlendirme (Router)
-final _router = GoRouter(
-  initialLocation: '/',
-  routes: [
-    GoRoute(
-      path: '/add-note',
-      builder: (context, state) => const AddNoteScreen(),
-    ),
-    GoRoute(
-      path: '/profile-completion',
-      builder: (context, state) => const ProfileCompletionScreen(),
-    ),
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const AuthScreen(),
-    ),
-  ],
-);
+// VARSAYILAN TEMA ARTIK DOĞRUDAN DARK MODE
+final themeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.dark);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,18 +28,21 @@ Future<void> main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp.router(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentThemeMode = ref.watch(themeProvider);
+
+    // GoRouter yerine standart MaterialApp kullanıyoruz (Çökme ve atma sorunu çözüldü)
+    return MaterialApp(
       title: 'Ders Notu Platformu',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
-      routerConfig: _router,
+      themeMode: currentThemeMode,
       debugShowCheckedModeBanner: false,
+      home: const AuthScreen(), // Başlangıç ekranımız
     );
   }
 }

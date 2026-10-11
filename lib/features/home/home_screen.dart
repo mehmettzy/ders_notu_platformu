@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Riverpod eklendi
+import '../../main.dart'; // main.dart'taki themeProvider'ı çekmek için eklendi
 import '../notes/add_note_screen.dart';
 import '../auth/auth_screen.dart';
 import '../profile/profile_screen.dart';
@@ -15,7 +17,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _supabase = Supabase.instance.client;
 
-  // Arama çubuğu için kontrolcü ve aranan kelimeyi tutacağımız değişken
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
@@ -33,6 +34,28 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Ders Notları'),
         actions: [
+          // TEMA DEĞİŞTİRME BUTONU (YENİ EKLENDİ)
+          Consumer(
+            builder: (context, ref, child) {
+              // Mevcut temayı kontrol ediyoruz
+              final currentTheme = ref.watch(themeProvider);
+              // Eğer tema karanlıksa (veya sistem karanlıksa) gece modundayız demektir
+              final isDark = currentTheme == ThemeMode.dark ||
+                  (currentTheme == ThemeMode.system &&
+                      MediaQuery.of(context).platformBrightness ==
+                          Brightness.dark);
+
+              return IconButton(
+                icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+                onPressed: () {
+                  // Butona basılınca şalteri tersine çeviriyoruz
+                  ref.read(themeProvider.notifier).state =
+                      isDark ? ThemeMode.light : ThemeMode.dark;
+                },
+              );
+            },
+          ),
+          // PROFİL BUTONU
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {
@@ -42,6 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
+          // ÇIKIŞ BUTONU
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
@@ -55,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           )
         ],
-        // Arama Çubuğu Tasarımı (AppBar'ın hemen altına eklenir)
+        // Arama Çubuğu (Daha önce eklediğimiz kod aynen duruyor)
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60.0),
           child: Padding(
@@ -87,8 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               onChanged: (value) {
                 setState(() {
-                  _searchQuery =
-                      value; // Kullanıcı yazdıkça arama kelimesini güncelliyoruz
+                  _searchQuery = value;
                 });
               },
             ),
@@ -116,7 +139,6 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           }
 
-          // ARAMA FİLTRESİ BURADA UYGULANIYOR
           final filteredNotes = notes.where((note) {
             final title = (note['title'] ?? '').toString().toLowerCase();
             final courseName =

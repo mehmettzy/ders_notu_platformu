@@ -22,10 +22,15 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
   // Dosya Seçme Fonksiyonu
   Future<void> _pickFile() async {
     try {
-      const typeGroup = XTypeGroup(
+      final typeGroup = XTypeGroup(
         label: 'Belgeler ve Görseller',
         extensions: <String>['pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg'],
-      );
+        uniformTypeIdentifiers: <String>[
+          'public.data',
+          'public.image',
+          'com.adobe.pdf'
+        ],
+      ); // XTypeGroup
 
       final file = await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
 

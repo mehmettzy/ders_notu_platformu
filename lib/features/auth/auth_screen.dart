@@ -64,9 +64,6 @@ class _AuthScreenState extends State<AuthScreen> {
         );
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Giriş başarılı!')),
-          );
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const HomeScreen()),
