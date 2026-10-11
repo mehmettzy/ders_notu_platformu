@@ -7,10 +7,11 @@ import 'core/theme/app_theme.dart';
 import 'features/auth/auth_screen.dart';
 import 'package:ders_notu_platformu/features/profile/profile_completion_screen.dart';
 import 'package:ders_notu_platformu/features/notes/add_note_screen.dart';
+import 'features/home/home_screen.dart';
 
 /// Yönlendirme (Router)
 final _router = GoRouter(
-  initialLocation: '/add-note',
+  initialLocation: '/',
   routes: [
     GoRoute(
       path: '/add-note',
