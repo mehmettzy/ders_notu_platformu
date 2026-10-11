@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../notes/add_note_screen.dart';
-import '../auth/auth_screen.dart'; // Çıkış yapınca döneceğimiz ekran
+import '../auth/auth_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,6 +16,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // KULLANICIYI BURADA TANIMLIYORUZ (Sarı çizgi hatası düzeldi)
+    final currentUser = _supabase.auth.currentUser;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ders Notları'),
@@ -74,11 +77,36 @@ class _HomeScreenState extends State<HomeScreen> {
                   subtitle: Text(
                       '${note['course_name']}\n${note['description'] ?? ''}'),
                   isThreeLine: true,
-                  trailing: const Icon(Icons.download),
-                  onTap: () async {
-                    // Veritabanından gelen dosya URL'sini alıyoruz
-                    final String? fileUrl = note['file_url'];
+                  // SADECE NOTU YÜKLEYEN KİŞİYE SİLME BUTONU GÖSTERİYORUZ
+                  trailing: currentUser != null &&
+                          note['user_id'] == currentUser.id
+                      ? IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () async {
+                            try {
+                              await _supabase
+                                  .from('notes')
+                                  .delete()
+                                  .eq('id', note['id']);
 
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Not başarıyla silindi.')),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Silme hatası: $e')),
+                                );
+                              }
+                            }
+                          },
+                        )
+                      : const Icon(Icons.download),
+                  onTap: () async {
+                    final String? fileUrl = note['file_url'];
                     if (fileUrl != null && fileUrl.isNotEmpty) {
                       final Uri url = Uri.parse(fileUrl);
                       if (await canLaunchUrl(url)) {
@@ -105,7 +133,6 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
-      // Yeni Not Ekleme Butonu (Scaffold'a ait)
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
