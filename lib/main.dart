@@ -6,13 +6,16 @@ import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/auth_screen.dart';
 import 'package:ders_notu_platformu/features/profile/profile_completion_screen.dart';
+import 'package:ders_notu_platformu/features/notes/add_note_screen.dart';
 
-// Yönlendirme (Router)
-// Yönlendirme (Router)
+/// Yönlendirme (Router)
 final _router = GoRouter(
-  initialLocation:
-      '/profile-completion', // Doğrudan profil tamamlama ekranıyla başlatır
+  initialLocation: '/add-note',
   routes: [
+    GoRoute(
+      path: '/add-note',
+      builder: (context, state) => const AddNoteScreen(),
+    ),
     GoRoute(
       path: '/profile-completion',
       builder: (context, state) => const ProfileCompletionScreen(),
@@ -30,7 +33,6 @@ Future<void> main() async {
   // Ortam değişkenlerini (.env) yükle
   await dotenv.load(fileName: ".env");
 
-  // Supabase'i başlat
   // Supabase'i başlat
   await Supabase.initialize(
     url: 'https://ujkrkdivjdmnjtgxwtyj.supabase.co',
