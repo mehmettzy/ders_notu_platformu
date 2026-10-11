@@ -14,9 +14,18 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _supabase = Supabase.instance.client;
 
+  // Arama çubuğu için kontrolcü ve aranan kelimeyi tutacağımız değişken
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    // KULLANICIYI BURADA TANIMLIYORUZ (Sarı çizgi hatası düzeldi)
     final currentUser = _supabase.auth.currentUser;
 
     return Scaffold(
@@ -36,6 +45,45 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           )
         ],
+        // Arama Çubuğu Tasarımı (AppBar'ın hemen altına eklenir)
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60.0),
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Ders adı veya not başlığı ara...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {
+                            _searchQuery = '';
+                          });
+                        },
+                      )
+                    : null,
+                filled: true,
+                fillColor: Theme.of(context).colorScheme.surface,
+                contentPadding: const EdgeInsets.all(0),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery =
+                      value; // Kullanıcı yazdıkça arama kelimesini güncelliyoruz
+                });
+              },
+            ),
+          ),
+        ),
       ),
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: _supabase
@@ -58,11 +106,28 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           }
 
+          // ARAMA FİLTRESİ BURADA UYGULANIYOR
+          final filteredNotes = notes.where((note) {
+            final title = (note['title'] ?? '').toString().toLowerCase();
+            final courseName =
+                (note['course_name'] ?? '').toString().toLowerCase();
+            final query = _searchQuery.toLowerCase();
+
+            return title.contains(query) || courseName.contains(query);
+          }).toList();
+
+          if (filteredNotes.isEmpty) {
+            return const Center(
+              child: Text('Aradığınız kritere uygun not bulunamadı.',
+                  textAlign: TextAlign.center),
+            );
+          }
+
           return ListView.builder(
-            itemCount: notes.length,
+            itemCount: filteredNotes.length,
             padding: const EdgeInsets.all(8.0),
             itemBuilder: (context, index) {
-              final note = notes[index];
+              final note = filteredNotes[index];
 
               return Card(
                 elevation: 2,
@@ -77,7 +142,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   subtitle: Text(
                       '${note['course_name']}\n${note['description'] ?? ''}'),
                   isThreeLine: true,
-                  // SADECE NOTU YÜKLEYEN KİŞİYE SİLME BUTONU GÖSTERİYORUZ
                   trailing: currentUser != null &&
                           note['user_id'] == currentUser.id
                       ? IconButton(
